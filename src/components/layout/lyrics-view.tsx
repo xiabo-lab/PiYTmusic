@@ -353,12 +353,20 @@ function TimedLyrics({
           becomes clear as it leaves the blurred strip.
           When the very first line is active it sits at viewport top
           (no above-center offset), so we fade the overlay out to keep
-          the first line crisp. */}
-      <div
-        aria-hidden
-        className="lyrics-blur-overlay pointer-events-none absolute inset-x-0 top-0 h-[26%] transition-opacity duration-500 ease-in-out"
-        style={{ opacity: activeIdx <= 0 ? 0 : 1 }}
-      />
+          the first line crisp.
+
+          NOT rendered in the full-screen stage: `backdrop-filter` is by
+          far the most expensive per-frame GPU op here, and blurring a
+          strip across a 3440x1440 surface on the Pi's V3D makes the
+          karaoke scroll visibly stutter. The panel is small enough that
+          the cost is negligible, so the effect stays there. */}
+      {!stage ? (
+        <div
+          aria-hidden
+          className="lyrics-blur-overlay pointer-events-none absolute inset-x-0 top-0 h-[26%] transition-opacity duration-500 ease-in-out"
+          style={{ opacity: activeIdx <= 0 ? 0 : 1 }}
+        />
+      ) : null}
     </div>
   );
 }

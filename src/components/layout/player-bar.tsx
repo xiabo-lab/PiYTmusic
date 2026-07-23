@@ -509,36 +509,46 @@ export function PlayerBar({
           </div>
         ) : null}
 
-        {/* `max-w-[20rem]` caps the cover at 320px so it can't grow
-            arbitrarily tall in the floating variant when the user
-            resizes the window wider — that would push the Play/Pause
-            button below the visible area. The right-card variant has
-            an effective inner width of 320 anyway (22rem - p-4*2), so
-            the cap is a no-op there. */}
-        <div
-          onPointerDown={onCoverPointerDown}
-          className={cn(
-            "mx-auto w-full max-w-[20rem] touch-none select-none",
-            variant !== "floating" && "cursor-grab active:cursor-grabbing",
-          )}
-        >
-          {track ? (
-            <Thumbnail
-              thumbnails={track.thumbnails}
-              alt={track.title}
-              className="aspect-square w-full rounded-md border border-hairline pointer-events-none"
-              targetSize={1024}
-              highRes
-              overrideHighRes={iTunesCover}
-            />
-          ) : (
-            <div className="aspect-square w-full rounded-md border border-hairline bg-muted" />
-          )}
-        </div>
+        {/* Cover art. Only the floating mini-player shows it — the
+            right-side card omits it so the meta, controls and lyrics
+            shift up and the lyrics flow gets the freed height (this is a
+            lyrics-first surface, especially on a wide/short display).
+            `max-w-[20rem]` caps it at 320px so it can't grow tall when
+            the floating window is resized wider and push Play off-screen. */}
+        {variant === "floating" ? (
+          <div
+            onPointerDown={onCoverPointerDown}
+            className="mx-auto w-full max-w-[20rem] touch-none select-none"
+          >
+            {track ? (
+              <Thumbnail
+                thumbnails={track.thumbnails}
+                alt={track.title}
+                className="aspect-square w-full rounded-md border border-hairline pointer-events-none"
+                targetSize={1024}
+                highRes
+                overrideHighRes={iTunesCover}
+              />
+            ) : (
+              <div className="aspect-square w-full rounded-md border border-hairline bg-muted" />
+            )}
+          </div>
+        ) : null}
 
-        {/* Title + artist with heart on the right */}
+        {/* Title + artist with heart on the right. In the right-card
+            variant (no cover) the title row doubles as the drag handle
+            for switching layouts, since the cover used to own that. */}
         <div className="flex items-start gap-2">
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div
+            onPointerDown={
+              variant !== "floating" ? onCoverPointerDown : undefined
+            }
+            className={cn(
+              "flex min-w-0 flex-1 flex-col",
+              variant !== "floating" &&
+                "touch-none select-none cursor-grab active:cursor-grabbing",
+            )}
+          >
             <span className="truncate text-base font-medium">
               {track?.title ?? "Nothing playing"}
             </span>
