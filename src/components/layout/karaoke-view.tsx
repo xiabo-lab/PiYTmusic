@@ -22,12 +22,18 @@ import {
 } from "@/components/ui/tooltip";
 import { usePlaybackStore, currentTrack } from "@/lib/store/playback";
 import { useKaraokeStore } from "@/lib/store/karaoke";
-import { LyricsBody, useLyricsView } from "@/components/layout/lyrics-view";
+import {
+  LyricsBody,
+  LyricsSourceButton,
+  useLyricsView,
+} from "@/components/layout/lyrics-view";
 import {
   ProgressSlider,
+  VolumeControl,
   formatTime,
   repeatLabel,
 } from "@/components/layout/player-bar";
+import { QueuePopover } from "@/components/layout/queue-panel";
 import { cn } from "@/lib/utils";
 
 // Plain-vite dev in a browser has no Tauri backend; `getCurrentWindow()`
@@ -197,6 +203,8 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="flex items-center justify-center gap-2">
+              <LyricsSourceButton state={lyricsState} className="size-11" />
+              <QueuePopover />
               <Button
                 variant="ghost"
                 size="icon"
@@ -257,6 +265,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
                 </TooltipTrigger>
                 <TooltipContent>{repeatLabel(repeat)}</TooltipContent>
               </Tooltip>
+              <VolumeControl direction="vertical" />
             </div>
           </div>
         </div>
