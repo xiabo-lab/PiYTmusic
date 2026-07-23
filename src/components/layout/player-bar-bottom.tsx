@@ -40,6 +40,7 @@ import {
   useITunesCover,
 } from "@/components/layout/player-bar";
 import { PlayerMoreMenu } from "@/components/layout/player-more-menu";
+import { KaraokeButton } from "@/components/layout/karaoke-view";
 import { cn } from "@/lib/utils";
 import { usePlayerCoverDrag } from "@/lib/player-drag";
 import { usePlaybackStore, currentTrack } from "@/lib/store/playback";
@@ -223,6 +224,7 @@ export function PlayerBarBottom() {
         {/* RIGHT wing: secondary actions, justified to the right edge. */}
         <div className="flex flex-1 items-center justify-end gap-0.5">
           {track ? <LikeDislikeButtons videoId={track.videoId} /> : null}
+          <KaraokeButton />
           <LyricsPopover state={lyricsState} />
           <QueuePopover />
           <VolumeControl direction="vertical" />

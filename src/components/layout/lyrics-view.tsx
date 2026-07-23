@@ -33,12 +33,12 @@ type Availability = "lrc" | "plain" | "loading" | "none";
 function loadPref(): Pref {
   try {
     const v = localStorage.getItem(PREF_KEY);
-    if (
-      v === "lrclib" ||
-      v === "musixmatch" ||
-      v === "genius" ||
-      v === "auto"
-    ) {
+    // Validate against the live source list rather than a hard-coded set,
+    // so a saved preference for any source (including the Chinese ones and
+    // YouTube Music, added after this was first written) round-trips
+    // instead of silently resetting to "auto".
+    if (v === "auto") return "auto";
+    if (v && (SOURCE_ORDER as string[]).includes(v)) {
       return v as Pref;
     }
   } catch {
@@ -113,26 +113,35 @@ export function useLyricsView(track: QueueTrack | undefined): LyricsViewState {
   };
 }
 
-export function LyricsBody({ state }: { state: LyricsViewState }) {
+/**
+ * `panel` — the compact player-bar / popover column (default).
+ * `stage` — the full-screen karaoke overlay: bigger, centered text.
+ * Both share the same scroll + highlight engine below.
+ */
+export type LyricsDisplay = "panel" | "stage";
+
+export function LyricsBody({
+  state,
+  display = "panel",
+}: {
+  state: LyricsViewState;
+  display?: LyricsDisplay;
+}) {
   if (!state.hasTrack) return null;
+  const notice =
+    display === "stage"
+      ? "text-center text-xl text-muted-foreground"
+      : "px-4 py-2 text-sm text-muted-foreground";
   if (state.isLoading && !state.active) {
-    return (
-      <p className="px-4 py-2 text-sm text-muted-foreground">
-        Loading lyrics…
-      </p>
-    );
+    return <p className={notice}>Loading lyrics…</p>;
   }
   if (!state.active) {
-    return (
-      <p className="px-4 py-2 text-sm text-muted-foreground">
-        No lyrics found.
-      </p>
-    );
+    return <p className={notice}>No lyrics found.</p>;
   }
   if (state.active.kind === "timed") {
-    return <TimedLyrics lines={state.active.lines} />;
+    return <TimedLyrics lines={state.active.lines} display={display} />;
   }
-  return <PlainLyrics text={state.active.text} />;
+  return <PlainLyrics text={state.active.text} display={display} />;
 }
 
 /** How long before a line's actual start time we flip it to active.
@@ -177,7 +186,14 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function TimedLyrics({ lines }: { lines: TimedLine[] }) {
+function TimedLyrics({
+  lines,
+  display = "panel",
+}: {
+  lines: TimedLine[];
+  display?: LyricsDisplay;
+}) {
+  const stage = display === "stage";
   const scrollRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const position = usePlaybackStore((s) => s.position);
@@ -273,7 +289,8 @@ function TimedLyrics({ lines }: { lines: TimedLine[] }) {
       <div
         ref={scrollRef}
         className={cn(
-          "lyrics-no-scrollbar flex h-full flex-col gap-1 overflow-y-auto px-1 pt-0 pb-16",
+          "lyrics-no-scrollbar flex h-full flex-col overflow-y-auto pt-0",
+          stage ? "gap-3 px-6 pb-[40vh]" : "gap-1 px-1 pb-16",
           // Mask kicks in only after the karaoke has moved past the
           // first line — that way the first line stays crisp at the
           // top of the column while the song hasn't started or is on
@@ -305,9 +322,16 @@ function TimedLyrics({ lines }: { lines: TimedLine[] }) {
                 // (not `transform`), so it's listed explicitly in the
                 // transition. Both branches set a `scale-*` so the
                 // browser has a defined start AND end to interpolate.
-                "lyrics-line origin-left cursor-pointer rounded-md px-2 py-1 text-left text-lg font-[650] leading-snug transition-[scale,color] duration-[1260ms] ease-in-out hover:bg-black/30",
+                "lyrics-line cursor-pointer rounded-md font-[650] leading-snug transition-[scale,color] duration-[1260ms] ease-in-out hover:bg-black/30",
+                // Stage (full-screen karaoke): large, centered text that
+                // scales from its center. Panel: compact, left-aligned.
+                stage
+                  ? "origin-center px-4 py-1.5 text-center text-3xl leading-relaxed sm:text-4xl"
+                  : "origin-left px-2 py-1 text-left text-lg",
                 isActive
-                  ? "scale-[1.06] text-foreground"
+                  ? stage
+                    ? "scale-[1.04] text-foreground"
+                    : "scale-[1.06] text-foreground"
                   : isPast
                     ? "scale-100 text-muted-foreground/40"
                     : "scale-100 text-muted-foreground/70",
@@ -336,9 +360,22 @@ function TimedLyrics({ lines }: { lines: TimedLine[] }) {
   );
 }
 
-function PlainLyrics({ text }: { text: string }) {
+function PlainLyrics({
+  text,
+  display = "panel",
+}: {
+  text: string;
+  display?: LyricsDisplay;
+}) {
   return (
-    <div className="lyrics-mask app-scroll h-full overflow-y-auto whitespace-pre-wrap px-2 pt-0 pb-12 text-lg font-medium leading-relaxed text-foreground/90">
+    <div
+      className={cn(
+        "lyrics-mask app-scroll h-full overflow-y-auto whitespace-pre-wrap pt-0 font-medium leading-relaxed text-foreground/90",
+        display === "stage"
+          ? "px-6 pb-[30vh] text-center text-2xl sm:text-3xl"
+          : "px-2 pb-12 text-lg",
+      )}
+    >
       {text}
     </div>
   );

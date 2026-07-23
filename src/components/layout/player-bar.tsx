@@ -36,6 +36,7 @@ import { Thumbnail } from "@/components/shared/thumbnail";
 import { LikeDislikeButtons } from "@/components/shared/like-buttons";
 import { ArtistLinks } from "@/components/shared/artist-links";
 import { PlayerMoreMenu } from "@/components/layout/player-more-menu";
+import { KaraokeButton } from "@/components/layout/karaoke-view";
 import { cn } from "@/lib/utils";
 import { usePlayerCoverDrag } from "@/lib/player-drag";
 import { usePlaybackStore, currentTrack } from "@/lib/store/playback";
@@ -655,6 +656,7 @@ export function PlayerBar({
           a router). */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-3">
         <div className="flex items-center gap-0.5">
+          <KaraokeButton />
           <LyricsSourceButton state={lyricsState} />
           <QueueToggleButton
             open={queueOpen}
