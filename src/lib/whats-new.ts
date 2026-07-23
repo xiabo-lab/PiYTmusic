@@ -38,14 +38,14 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    version: "0.2.0",
+    version: "0.3.0",
     date: "July 2026",
     sections: [
       {
         heading: "Full-screen lyrics",
         items: [
           "A new button in the player, just left of the lyrics mic, opens a full-screen karaoke view.",
-          "Lyrics fill the top of the screen; the song, progress bar and playback controls sit below. Press Escape or the close button to exit.",
+          "Lyrics fill the top of the screen; the song, progress bar and full playback controls sit below, including the lyrics source, queue and volume. Press Escape or the close button to exit.",
         ],
       },
     ],
