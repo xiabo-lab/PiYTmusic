@@ -16,6 +16,7 @@ import { PremiumGateDialog } from "@/components/layout/premium-gate-dialog";
 import { ChannelPickerDialog } from "@/components/layout/channel-picker-dialog";
 import { WhatsNewDialog } from "@/components/layout/whats-new-dialog";
 import { KaraokeView } from "@/components/layout/karaoke-view";
+import { useKaraokeStore } from "@/lib/store/karaoke";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAudioEngine } from "@/lib/audio-engine";
@@ -60,6 +61,16 @@ function useGlobalShortcuts() {
         if (t?.closest("button, a, [role='button'], [tabindex]")) return;
         e.preventDefault();
         usePlaybackStore.getState().toggle();
+      }
+      // L toggles the full-screen karaoke lyrics view. A
+      // layout-independent way in matters on very short displays (a
+      // 1920x440 "bar" screen), where the on-screen button at the bottom
+      // of the player can be clipped off. Escape closes it (handled in
+      // karaoke-view). Ignore modified presses so it doesn't hijack
+      // browser/OS shortcuts.
+      if ((e.key === "l" || e.key === "L") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        useKaraokeStore.getState().toggle();
       }
     };
     // On window blur (e.g. Alt+Tab away) drop focus from whatever control

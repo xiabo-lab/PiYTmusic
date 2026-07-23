@@ -41,6 +41,14 @@ import { cn } from "@/lib/utils";
 const IS_TAURI =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+// Control sizes scale with viewport height via clamp(min, Nvh, max): at a
+// normal 1080p/1440p height every value hits its max (identical to a fixed
+// size), but on a 1920x440 "bar" display they shrink so the whole control
+// cluster still fits the short lower band instead of overflowing into the
+// lyrics.
+const SECONDARY_BTN = "size-[clamp(2.25rem,6.5vh,2.75rem)]";
+const PLAY_BTN = "size-[clamp(2.75rem,9vh,4rem)]";
+
 /**
  * Full-screen "karaoke" lyrics overlay.
  *
@@ -167,7 +175,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
         {/* Lyrics — upper portion. flex-[3] gives them ~60% of the
             height; the column scrolls internally and keeps the active
             line centered. */}
-        <div className="flex min-h-0 flex-[3] flex-col items-center pt-[7vh]">
+        <div className="flex min-h-0 flex-[3] flex-col items-center pt-[clamp(0.5rem,5vh,4rem)]">
           <div className="flex h-full min-h-0 w-full max-w-4xl flex-col">
             <LyricsBody state={lyricsState} display="stage" />
           </div>
@@ -175,13 +183,13 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
 
         {/* Controls — centered in the lower band (~40% of the height). */}
         <div className="flex flex-[2] shrink-0 items-center justify-center px-6">
-          <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-5">
+          <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-[clamp(0.5rem,2.5vh,1.25rem)]">
             <div className="flex flex-col items-center text-center">
-              <span className="text-2xl font-semibold sm:text-3xl">
+              <span className="font-semibold text-[clamp(1.05rem,3.5vh,1.875rem)]">
                 {track?.title ?? "Nothing playing"}
               </span>
               {artist ? (
-                <span className="mt-1.5 text-lg text-muted-foreground">
+                <span className="mt-1.5 text-[clamp(0.85rem,2.2vh,1.125rem)] text-muted-foreground">
                   {artist}
                 </span>
               ) : null}
@@ -203,7 +211,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="flex items-center justify-center gap-2">
-              <LyricsSourceButton state={lyricsState} className="size-11" />
+              <LyricsSourceButton state={lyricsState} className={SECONDARY_BTN} />
               <QueuePopover />
               <Button
                 variant="ghost"
@@ -211,7 +219,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
                 aria-label="Shuffle"
                 aria-pressed={shuffle}
                 onClick={() => setShuffle(!shuffle)}
-                className={cn("size-11", shuffle && "text-brand")}
+                className={cn(SECONDARY_BTN, shuffle && "text-brand")}
               >
                 <ShuffleIcon />
               </Button>
@@ -221,7 +229,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
                 aria-label="Previous"
                 onClick={prev}
                 disabled={!hasTrack}
-                className="size-11"
+                className={SECONDARY_BTN}
               >
                 <SkipBackIcon className="fill-current" />
               </Button>
@@ -230,7 +238,10 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
                 aria-label={playing ? "Pause" : "Play"}
                 onClick={toggle}
                 disabled={!hasTrack}
-                className="size-16 rounded-full bg-brand text-white hover:bg-brand/90"
+                className={cn(
+                  PLAY_BTN,
+                  "rounded-full bg-brand text-white hover:bg-brand/90",
+                )}
               >
                 {loading ? (
                   <Loader2Icon className="animate-spin" />
@@ -246,7 +257,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
                 aria-label="Next"
                 onClick={next}
                 disabled={!hasTrack}
-                className="size-11"
+                className={SECONDARY_BTN}
               >
                 <SkipForwardIcon className="fill-current" />
               </Button>
@@ -258,7 +269,7 @@ function KaraokeStage({ onClose }: { onClose: () => void }) {
                     aria-label={repeatLabel(repeat)}
                     aria-pressed={repeat !== "off"}
                     onClick={cycleRepeat}
-                    className={cn("size-11", repeat !== "off" && "text-brand")}
+                    className={cn(SECONDARY_BTN, repeat !== "off" && "text-brand")}
                   >
                     {repeat === "one" ? <Repeat1Icon /> : <RepeatIcon />}
                   </Button>

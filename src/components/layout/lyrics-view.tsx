@@ -324,9 +324,12 @@ function TimedLyrics({
                 // browser has a defined start AND end to interpolate.
                 "lyrics-line cursor-pointer rounded-md font-[650] leading-snug transition-[scale,color] duration-[1260ms] ease-in-out hover:bg-black/30",
                 // Stage (full-screen karaoke): large, centered text that
-                // scales from its center. Panel: compact, left-aligned.
+                // scales from its center. The size tracks viewport height
+                // (clamp) so lines stay big on a tall screen yet a few
+                // still fit on a 1920x440 bar display. Panel: compact,
+                // left-aligned.
                 stage
-                  ? "origin-center px-4 py-1.5 text-center text-3xl leading-relaxed sm:text-4xl"
+                  ? "origin-center px-4 py-1.5 text-center text-[clamp(1.25rem,4.5vh,2.25rem)] leading-relaxed"
                   : "origin-left px-2 py-1 text-left text-lg",
                 isActive
                   ? stage
@@ -372,7 +375,7 @@ function PlainLyrics({
       className={cn(
         "lyrics-mask app-scroll h-full overflow-y-auto whitespace-pre-wrap pt-0 font-medium leading-relaxed text-foreground/90",
         display === "stage"
-          ? "px-6 pb-[30vh] text-center text-2xl sm:text-3xl"
+          ? "px-6 pb-[30vh] text-center text-[clamp(1.1rem,4vh,1.875rem)]"
           : "px-2 pb-12 text-lg",
       )}
     >
