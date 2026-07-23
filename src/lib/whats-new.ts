@@ -38,6 +38,18 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "0.3.3",
+    date: "July 2026",
+    sections: [
+      {
+        heading: "Always the song version",
+        items: [
+          "Removed the Song/Video switch. Every track now plays its audio (song) version, never the music video.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.3.2",
     date: "July 2026",
     sections: [
