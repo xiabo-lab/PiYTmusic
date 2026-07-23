@@ -38,6 +38,19 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "0.3.2",
+    date: "July 2026",
+    sections: [
+      {
+        heading: "More room for lyrics",
+        items: [
+          "The side player no longer shows the album picture, so the player and lyrics move up and the lyrics get more space.",
+          "The full-screen lyrics scroll more smoothly, especially on a Raspberry Pi driving a large display.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.3.1",
     date: "July 2026",
     sections: [
