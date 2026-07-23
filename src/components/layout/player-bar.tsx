@@ -11,8 +11,6 @@ import {
   Volume2Icon,
   VolumeXIcon,
   Loader2Icon,
-  MusicIcon,
-  VideoIcon,
 } from "lucide-react";
 import { QueueBody, QueueToggleButton } from "@/components/layout/queue-panel";
 import {
@@ -22,7 +20,6 @@ import {
 } from "@/components/layout/lyrics-view";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,11 +37,6 @@ import { KaraokeButton } from "@/components/layout/karaoke-view";
 import { cn } from "@/lib/utils";
 import { usePlayerCoverDrag } from "@/lib/player-drag";
 import { usePlaybackStore, currentTrack } from "@/lib/store/playback";
-import {
-  useTrackSourceStore,
-  type SourceKind,
-} from "@/lib/store/track-source";
-import { findAlternateVideoId } from "@/lib/innertube/alternate-source";
 import { lookupITunesCover, cacheCoverToDisk } from "@/lib/cover-art";
 import type { QueueTrack, RepeatMode } from "@/lib/store/playback";
 
@@ -101,102 +93,6 @@ export function repeatLabel(repeat: RepeatMode): string {
       : "Repeat off";
 }
 
-/**
- * Segmented song/video toggle. Displayed as two tightly grouped icons —
- * the active one filled, the other ghosted — matching the layout
- * reference. Clicking either side switches to that source; if the
- * alternate videoId hasn't been resolved yet, we fetch it on demand.
- */
-export function SourceToggle({ track }: { track: QueueTrack }) {
-  const record = useTrackSourceStore((s) => s.byVideoId[track.videoId]);
-  const setSelected = useTrackSourceStore((s) => s.setSelected);
-  const setAlternate = useTrackSourceStore((s) => s.setAlternate);
-  const [busy, setBusy] = useState<SourceKind | null>(null);
-
-  const selected: SourceKind = record?.selected ?? "song";
-
-  const switchTo = async (target: SourceKind) => {
-    if (busy || target === selected) return;
-    const cachedAlt = target === "video" ? record?.video : record?.song;
-    if (cachedAlt) {
-      setSelected(track.videoId, target);
-      return;
-    }
-    setBusy(target);
-    try {
-      const artistsLine = track.artists?.map((a) => a.name).join(" ") ?? "";
-      const query = `${track.title} ${artistsLine}`.trim();
-      const altId = await findAlternateVideoId(query, track.videoId, target);
-      if (!altId) {
-        toast.error(
-          target === "video"
-            ? "No video version found"
-            : "No song version found",
-        );
-        return;
-      }
-      setAlternate(track.videoId, target, altId);
-      setSelected(track.videoId, target);
-    } catch (e) {
-      toast.error(`Couldn't switch source: ${(e as Error).message}`);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  return (
-    <div className="flex items-center rounded-md border bg-muted/40 p-0.5">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-label="Song version"
-            aria-pressed={selected === "song"}
-            onClick={() => switchTo("song")}
-            disabled={busy !== null}
-            className={cn(
-              "flex size-7 items-center justify-center rounded-sm transition-colors",
-              selected === "song"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-white/10 hover:text-foreground",
-            )}
-          >
-            {busy === "song" ? (
-              <Loader2Icon className="size-4 animate-spin" />
-            ) : (
-              <MusicIcon className="size-4" />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Song version</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-label="Video version"
-            aria-pressed={selected === "video"}
-            onClick={() => switchTo("video")}
-            disabled={busy !== null}
-            className={cn(
-              "flex size-7 items-center justify-center rounded-sm transition-colors",
-              selected === "video"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-white/10 hover:text-foreground",
-            )}
-          >
-            {busy === "video" ? (
-              <Loader2Icon className="size-4 animate-spin" />
-            ) : (
-              <VideoIcon className="size-4" />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Video version</TooltipContent>
-      </Tooltip>
-    </div>
-  );
-}
 
 export function ProgressSlider({
   position,
@@ -675,8 +571,7 @@ export function PlayerBar({
           <VolumeControl />
         </div>
         <div className="flex items-center gap-1">
-          {track && <SourceToggle track={track} />}
-          <PlayerMoreMenu track={track} includeSource={false} />
+          <PlayerMoreMenu track={track} />
         </div>
       </div>
     </aside>

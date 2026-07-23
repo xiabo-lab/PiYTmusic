@@ -1,12 +1,4 @@
-import { useState } from "react";
-import {
-  CheckIcon,
-  Loader2Icon,
-  MoreVerticalIcon,
-  MusicIcon,
-  VideoIcon,
-} from "lucide-react";
-import { toast } from "sonner";
+import { MoreVerticalIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { emit } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
@@ -19,9 +11,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -30,24 +19,12 @@ import {
   dropPrimitives,
   useTrackMenuController,
 } from "@/components/shared/track-context-menu";
-import { findAlternateVideoId } from "@/lib/innertube/alternate-source";
 import { isFloatingPlayerWindow } from "@/lib/floating-player";
-import {
-  useTrackSourceStore,
-  type SourceKind,
-} from "@/lib/store/track-source";
 import type { QueueTrack } from "@/lib/store/playback";
 import type { ShelfItem } from "@/lib/innertube/types";
 
 type Props = {
   track: QueueTrack | undefined;
-  /**
-   * When `true` (default), the menu prepends a Song/Video radio
-   * group. The right-card layout already has a segmented source
-   * toggle inline so it passes `false` to avoid duplicating it; the
-   * bottom bar has no inline toggle and relies on this menu for it.
-   */
-  includeSource?: boolean;
   align?: "start" | "end";
   side?: "top" | "right" | "bottom" | "left";
 };
@@ -110,7 +87,6 @@ function PlayerMoreMenuFloating(props: Props) {
  */
 function PlayerMoreMenuInner({
   track,
-  includeSource = true,
   align = "end",
   side = "top",
   onGoToArtist,
@@ -149,21 +125,12 @@ function PlayerMoreMenuInner({
         </Tooltip>
         <DropdownMenuContent align={align} side={side} className="w-56">
           {track ? (
-            <>
-              {includeSource ? (
-                <>
-                  <DropdownMenuLabel>Source</DropdownMenuLabel>
-                  <SourceMenuItems track={track} />
-                  <DropdownMenuSeparator />
-                </>
-              ) : null}
-              <TrackMenuItems
-                item={item}
-                controller={controller}
-                primitives={dropPrimitives}
-                onGoToArtist={onGoToArtist}
-              />
-            </>
+            <TrackMenuItems
+              item={item}
+              controller={controller}
+              primitives={dropPrimitives}
+              onGoToArtist={onGoToArtist}
+            />
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -179,79 +146,3 @@ function PlayerMoreMenuInner({
   );
 }
 
-/**
- * Source-kind switcher rendered as menu items (rather than the
- * segmented control used in the right card). Same on-demand
- * `findAlternateVideoId` lookup — the menu form is just less wide.
- */
-function SourceMenuItems({ track }: { track: QueueTrack }) {
-  const record = useTrackSourceStore((s) => s.byVideoId[track.videoId]);
-  const setSelected = useTrackSourceStore((s) => s.setSelected);
-  const setAlternate = useTrackSourceStore((s) => s.setAlternate);
-  const [busy, setBusy] = useState<SourceKind | null>(null);
-  const selected: SourceKind = record?.selected ?? "song";
-
-  const switchTo = async (target: SourceKind) => {
-    if (busy || target === selected) return;
-    const cachedAlt = target === "video" ? record?.video : record?.song;
-    if (cachedAlt) {
-      setSelected(track.videoId, target);
-      return;
-    }
-    setBusy(target);
-    try {
-      const artistsLine = track.artists?.map((a) => a.name).join(" ") ?? "";
-      const query = `${track.title} ${artistsLine}`.trim();
-      const altId = await findAlternateVideoId(query, track.videoId, target);
-      if (!altId) {
-        toast.error(
-          target === "video"
-            ? "No video version found"
-            : "No song version found",
-        );
-        return;
-      }
-      setAlternate(track.videoId, target, altId);
-      setSelected(track.videoId, target);
-    } catch (e) {
-      toast.error(`Couldn't switch source: ${(e as Error).message}`);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  return (
-    <>
-      <DropdownMenuItem
-        onSelect={(e) => {
-          e.preventDefault();
-          void switchTo("song");
-        }}
-        disabled={busy !== null}
-      >
-        {busy === "song" ? (
-          <Loader2Icon className="size-4 animate-spin" />
-        ) : (
-          <MusicIcon className="size-4" />
-        )}
-        <span className="flex-1">Song</span>
-        {selected === "song" ? <CheckIcon className="size-4" /> : null}
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onSelect={(e) => {
-          e.preventDefault();
-          void switchTo("video");
-        }}
-        disabled={busy !== null}
-      >
-        {busy === "video" ? (
-          <Loader2Icon className="size-4 animate-spin" />
-        ) : (
-          <VideoIcon className="size-4" />
-        )}
-        <span className="flex-1">Video</span>
-        {selected === "video" ? <CheckIcon className="size-4" /> : null}
-      </DropdownMenuItem>
-    </>
-  );
-}

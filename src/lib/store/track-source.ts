@@ -128,13 +128,17 @@ export function initFloatingTrackSourceBridge(): void {
  * Resolve the videoId we should actually stream given the displayed
  * (queue) id. Snapshot helper — for reactive subscriptions, read from
  * the store directly.
+ *
+ * The Song/Video toggle was removed: playback is always the audio
+ * ("song") version, never the music video. A record's `song` id is
+ * always set, so we return it and ignore any stale `selected: "video"`
+ * left in persisted state from an earlier build. With no record the
+ * displayed id is already the song id.
  */
 export function resolveStreamId(
   displayedId: string,
   byVideoId: Record<string, TrackSources>,
 ): string {
   const rec = byVideoId[displayedId];
-  if (!rec) return displayedId;
-  if (rec.selected === "video" && rec.video) return rec.video;
-  return rec.song;
+  return rec ? rec.song : displayedId;
 }
