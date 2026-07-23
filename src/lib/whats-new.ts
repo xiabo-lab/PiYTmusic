@@ -38,6 +38,19 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "0.3.1",
+    date: "July 2026",
+    sections: [
+      {
+        heading: "Lyrics on small screens",
+        items: [
+          "The full-screen lyrics view now fits short displays, so it works on a wide, short panel as a dedicated lyrics screen.",
+          "Press L at any time to open or close the full-screen lyrics, even when the player controls aren't visible.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.3.0",
     date: "July 2026",
     sections: [
